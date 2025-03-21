@@ -27,6 +27,8 @@
     "multer-gridfs-storage": "^5.0.2",
     "nodemailer": "^6.10.0",
     "nodemon": "^3.1.0",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
     "resend": "^4.1.2",
     "validator": "^13.12.0"
   }

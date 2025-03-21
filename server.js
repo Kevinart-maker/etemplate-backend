@@ -2,6 +2,8 @@ require('dotenv').config();
 const Products = require('./modules/productModel')
 
 
+const passport = require('passport');
+
 const express = require('express');
 const mongoose = require('mongoose');
 const productRoutes = require('./routes/productRoutes');
