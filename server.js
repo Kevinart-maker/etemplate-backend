@@ -1,22 +1,37 @@
 require('dotenv').config();
-const Vehicles = require('./modules/productModel')
+const Products = require('./modules/productModel')
 
 
 const express = require('express');
 const mongoose = require('mongoose');
-const vehicleRoutes = require('./routes/vehicleRoutes');
+const productRoutes = require('./routes/productRoutes');
 const cors = require('cors');
 const userRoutes = require('./routes/user')
 
 // Express app
 const app = express();
 
+const allowedOrigins = [
+    'https://clabed.vercel.app',
+    'https://clabed-frontend.vercel.app',
+    'http://localhost:5173',
+    'https://www.clabedautos.com'
+];
+
 const corsOptions = {
-    origin: 'https://clabed.vercel.app/',
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin: (origin, callback) => {
+        console.log("Incoming request from:", origin); // Log request origins
+        
+        if (allowedOrigins.includes(origin) || !origin) {
+            callback(null, true);  // Allow request
+        } else {
+            console.error(`Blocked CORS request from: ${origin}`);
+            callback(new Error('Not allowed by CORS'));  // Reject request
+        }
+    },
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-    optionsSuccessStatus: 200,
   };
 
 // Middleware
@@ -24,23 +39,12 @@ app.use(express.json());
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
 
+
 app.use((req, res, next) => {
     // console.log(req.path, req.method);
     console.log(`${req.method} request for '${req.url}'`);
     next();
 });
-
-app.use((req, res, next) => {
-    res.header('Access-Control-Allow-Origin', 'https://clabed.vercel.app');
-    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-    res.header('Access-Control-Allow-Credentials', 'true');
-    if (req.method === 'OPTIONS') {
-        return res.sendStatus(200);  // Respond OK to preflight
-    }
-    next();
-});
-
 
 // search vehicles
 const searchVehicles = async (req, res) => {
@@ -90,7 +94,7 @@ const searchVehicles = async (req, res) => {
 };
 
 // Routes
-app.use('/api/vehicles/', vehicleRoutes);
+app.use('/api/products/', productRoutes);
 app.use('/api/vehicle/search', searchVehicles);
 app.use('/api/user', userRoutes);
 
