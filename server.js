@@ -13,28 +13,12 @@ const userRoutes = require('./routes/user')
 // Express app
 const app = express();
 
-const allowedOrigins = [
-    'https://clabed.vercel.app',
-    'https://clabed-frontend.vercel.app',
-    'http://localhost:5173',
-    'https://www.clabedautos.com'
-];
-
 const corsOptions = {
-    origin: (origin, callback) => {
-        console.log("Incoming request from:", origin); // Log request origins
-        
-        if (allowedOrigins.includes(origin) || !origin) {
-            callback(null, true);  // Allow request
-        } else {
-            console.error(`Blocked CORS request from: ${origin}`);
-            callback(new Error('Not allowed by CORS'));  // Reject request
-        }
-    },
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
-  };
+};
 
 // Middleware
 app.use(express.json());
