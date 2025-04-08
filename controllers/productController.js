@@ -237,8 +237,12 @@ const searchProducts = async (req, res) => {
     try {
         const { query } = req.query; // Get the search query from the request
 
+        console.log('Search query:', query);
+
         if (!query) {
-            return res.status(400).json({ error: 'Search query is required!' });
+            const products = await Products.find({});
+            console.log('Found all products:', products);
+            return res.status(200).json(products);
         }
 
         // Perform a case-insensitive search on name, category, and brand fields

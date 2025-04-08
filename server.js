@@ -32,56 +32,41 @@ app.use((req, res, next) => {
     next();
 });
 
-// search vehicles
-const searchVehicles = async (req, res) => {
-    const { query } = req.query;
-    console.log("Searched query: ", query)
+// Search products
+const searchProducts = async (req, res) => {
     try {
+        const { query } = req.query; // Get the search query from the request
+
+        console.log('Search query:', query);
+
         if (!query) {
-            // If the query is empty, return all vehicles
-            const vehicles = await Vehicles.find({});
-            console.log('Found all vehicles:', vehicles);
-            return res.status(200).json(vehicles);
-        }
-        
-        
-        const numericFields = ['year', 'mileage'];
-        const queryConditions = [];
-
-        // Construct query conditions based on the query
-        if (query) {
-            const numericQuery = Number(query);
-            if (!isNaN(numericQuery)) {
-                // Handle numeric fields
-                numericFields.forEach(field => {
-                    queryConditions.push({ [field]: numericQuery });
-                });
-            }
-            // Handle string fields
-            const stringFields = [
-                'make', 'model', 'condition', 'available', 'engineType', 
-                'transmission', 'fuelType', 'exteriorColor', 'interiorColor', 
-                'interiorMaterial', 'location'
-            ];
-            stringFields.forEach(field => {
-                queryConditions.push({ [field]: { $regex: query, $options: 'i' } });
-            });
+            const products = await Products.find({});
+            console.log('Found all products:', products);
+            return res.status(200).json(products);
         }
 
-        const vehicles = await Vehicles.find({
-            $or: queryConditions
+        // Perform a case-insensitive search on name, category, and brand fields
+        const products = await Products.find({
+            $or: [
+                { name: { $regex: query, $options: 'i' } },
+                { category: { $regex: query, $options: 'i' } },
+                { brand: { $regex: query, $options: 'i' } }
+            ]
         });
-        console.log('Found vehicles:', vehicles);
-        res.status(200).json(vehicles);
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: 'No products found!' });
+        }
+
+        res.status(200).json(products);
     } catch (error) {
-        console.error('Error searching vehicles:', error);
-        res.status(500).json({ error: 'Failed to search vehicles' });
+        res.status(500).json({ error: error.message });
     }
 };
 
 // Routes
 app.use('/api/products/', productRoutes);
-app.use('/api/vehicle/search', searchVehicles);
+app.use('/api/product/search', searchProducts);
 app.use('/api/user', userRoutes);
 
 // Connect to MongoDB and start the server
