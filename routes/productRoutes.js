@@ -6,7 +6,8 @@ const{
     deleteProduct,
     updateProduct,
     addReview,
-    getProductReviews
+    getProductReviews,
+    searchProducts
 } = require('../controllers/productController')
 const { requireAuth, requireAdmin } = require('../middleware/requireAuth')
 const upload = require('../middleware/uploadMiddleware')
@@ -19,6 +20,9 @@ router.get('/', getProducts)
 
 // get single product
 router.get('/:id', getProduct)
+
+//get searched products
+router.get('/search', searchProducts);
 
 
 // Admin routes (e.g., for adding, updating, or deleting products)

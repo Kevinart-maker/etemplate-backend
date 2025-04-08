@@ -232,6 +232,34 @@ const getProductReviews = async (req, res) => {
     }
 };
 
+// Search products
+const searchProducts = async (req, res) => {
+    try {
+        const { query } = req.query; // Get the search query from the request
+
+        if (!query) {
+            return res.status(400).json({ error: 'Search query is required!' });
+        }
+
+        // Perform a case-insensitive search on name, category, and brand fields
+        const products = await Products.find({
+            $or: [
+                { name: { $regex: query, $options: 'i' } },
+                { category: { $regex: query, $options: 'i' } },
+                { brand: { $regex: query, $options: 'i' } }
+            ]
+        });
+
+        if (products.length === 0) {
+            return res.status(404).json({ message: 'No products found!' });
+        }
+
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+};
+
 module.exports = {
     getProducts,
     getProduct,
@@ -239,5 +267,6 @@ module.exports = {
     deleteProduct,
     updateProduct,
     addReview,
-    getProductReviews
+    getProductReviews,
+    searchProducts
 }
