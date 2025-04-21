@@ -137,24 +137,63 @@ const deleteProduct = async (req, res)=>{
 }
 
 // update a product
-const updateProduct = async (req, res)=>{
-    const {id} = req.params
+const updateProduct = async (req, res) => {
+    const { id } = req.params;
 
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(404).json({error: "No such product"})
+    // Validate the product ID
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(404).json({ error: "No such product" });
     }
 
-    const product = await Products.findOneAndUpdate(
-        {_id: id}, 
-        { ...req.body },
-        { new: true }
-    )
-    if(!product){
-        return res.status(400).json({error: 'Product not found!'})
+    let updates = { ...req.body };
+    let imageUrls = [];
+
+    // Handle image uploads if new images are provided
+    if (req.files && req.files.length > 0) {
+        try {
+            const uploadPromises = req.files.map(async (file) => {
+                const b64 = Buffer.from(file.buffer).toString('base64');
+                const dataURI = `data:${file.mimetype};base64,${b64}`;
+
+                const result = await cloudinary.uploader.upload(dataURI, {
+                    folder: 'products',
+                    format: 'webp',
+                    transformation: [
+                        { width: 1200, height: 800, crop: 'limit' },
+                        { quality: 'auto' }
+                    ]
+                });
+                return result.secure_url;
+            });
+
+            imageUrls = await Promise.all(uploadPromises);
+            updates.images = imageUrls; // Add the new image URLs to the updates
+        } catch (error) {
+            return res.status(400).json({ error: 'Error uploading images' });
+        }
     }
 
-    res.status(200).json(product)
-}
+    // Prevent updating restricted fields
+    delete updates._id;
+    delete updates.reviews;
+
+    try {
+        // Update the product in the database
+        const product = await Products.findOneAndUpdate(
+            { _id: id },
+            updates,
+            { new: true, runValidators: true } // Ensure validation is applied
+        );
+
+        if (!product) {
+            return res.status(404).json({ error: "Product not found!" });
+        }
+
+        res.status(200).json(product);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
 
 // add review and rating
 const addReview = async (req, res) => {
