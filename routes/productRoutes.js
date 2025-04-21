@@ -34,7 +34,7 @@ router.post('/',requireAuth, requireAdmin , upload.array('images', 10), createPr
 router.delete('/:id',requireAuth, requireAdmin , deleteProduct)
 
 // update a product
-router.patch('/:id',requireAuth, requireAdmin , updateProduct)
+router.patch('/:id',requireAuth, requireAdmin , upload.array('images', 10), updateProduct)
 
 // Add this new route (make sure it's protected by your auth middleware)
 router.post('/:id/reviews', requireAuth, addReview);
