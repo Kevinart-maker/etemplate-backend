@@ -2,7 +2,7 @@ const express = require('express');
 
 // Controller functions
 const { signupUser, loginUser, getAllUsers, searchUsers, deleteUser, resetPassword, sendResetEmail } = require('../controllers/userController');
-const { requireAuth, requireAdmin } = require('../middleware/requireAuth');
+const { requireAuth, requireAdmin, requireSuperAdmin } = require('../middleware/requireAuth');
 
 const router = express.Router();
 
@@ -31,7 +31,7 @@ router.get('/admin-only', requireAuth, requireAdmin, (req, res) => {
 router.get('/search', requireAuth, requireAdmin, searchUsers);
 
 // delete users
-router.delete('/:id', requireAuth, requireAdmin, deleteUser);
+router.delete('/:id', requireAuth, requireSuperAdmin, deleteUser);
 
 router.post('/forgot-password', sendResetEmail);
 router.post('/reset-password', resetPassword);
