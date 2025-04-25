@@ -40,6 +40,10 @@ const requireAdmin = (req, res, next) => {
 };
 
 const requireSuperAdmin = (req, res, next) => {
+    if (!req.user || !req.user.role) {
+        return res.status(401).json({ error: 'Unauthorized. User or role not found.' });
+    }
+    
     if (req.user.role !== 'superadmin') {
         return res.status(403).json({ error: 'Super Admin access required' });
     }
