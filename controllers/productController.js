@@ -26,22 +26,24 @@ const getProducts = async (req, res) => {
     }
 };
 
-// get a single product
-const getProduct = async (req, res)=>{
-    const {id} = req.params
 
-    if(!mongoose.Types.ObjectId.isValid(id)){
-        return res.status(404).json({error: "No such product"})
+// get a single product by slug
+const getProduct = async (req, res) => {
+    const { slug } = req.params;
+
+    try {
+        const product = await Products.findOne({ slug });
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found!' });
+        }
+
+        res.status(200).json(product);
+    } catch (error) {
+        res.status(500).json({ error: 'Server error' });
     }
+};
 
-    const product = await Products.findById(id)
-
-    if(!product){
-        return res.status(404).json({error: 'Product not found!'})
-    }
-
-    res.status(200).json(product)
-}
 
 // create a new product
 const createProduct = async (req, res) => {

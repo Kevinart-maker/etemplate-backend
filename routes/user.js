@@ -1,8 +1,9 @@
 const express = require('express');
 
 // Controller functions
-const { signupUser, loginUser, getAllUsers, searchUsers, deleteUser, resetPassword, sendResetEmail } = require('../controllers/userController');
+const { signupUser, loginUser, getAllUsers, searchUsers, deleteUser, resetPassword, sendResetEmail, updateUserProfile } = require('../controllers/userController');
 const { requireAuth, requireAdmin, requireSuperAdmin } = require('../middleware/requireAuth');
+const upload = require('../middleware/uploadMiddleware')
 
 const router = express.Router();
 
@@ -35,5 +36,8 @@ router.delete('/:id', requireAuth, requireSuperAdmin, deleteUser);
 
 router.post('/forgot-password', sendResetEmail);
 router.post('/reset-password', resetPassword);
+
+// Update user profile route
+router.patch('/profile', requireAuth, upload.single('image'), updateUserProfile);
 
 module.exports = router;

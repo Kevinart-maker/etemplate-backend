@@ -37,6 +37,10 @@ const userSchema = new Schema({
     enum: ['user', 'admin', 'superadmin'],
     default: 'user',
   },
+  image: {
+    type: String, // URL to the user's profile image
+    default: null, // Default image URL
+  },
   createdAt: {
     type: Date,
     default: Date.now,

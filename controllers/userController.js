@@ -4,6 +4,7 @@ const { Resend } = require('resend');
 require('dotenv').config();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const cloudinary = require('../config/cloudinary');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -190,7 +191,52 @@ const resetPassword = async (req, res) => {
     }
 };
 
+// Update User Profile
+const updateUserProfile = async (req, res) => {
+    const { name } = req.body;
+    const userId = req.user._id; // Assuming `requireAuth` middleware adds `req.user`
+
+    let imageUrl;
+
+    // Handle image upload if a file is provided
+    if (req.file) {
+        try {
+            const b64 = Buffer.from(req.file.buffer).toString('base64');
+            const dataURI = `data:${req.file.mimetype};base64,${b64}`;
+
+            const result = await cloudinary.uploader.upload(dataURI, {
+                folder: 'users',
+                format: 'webp',
+                transformation: [
+                    { width: 400, height: 400, crop: 'limit' },
+                    { quality: 'auto' },
+                ],
+            });
+
+            imageUrl = result.secure_url;
+        } catch (error) {
+            return res.status(400).json({ error: 'Error uploading image' });
+        }
+    }
+
+    try {
+        // Update the user's profile
+        const updates = {};
+        if (name) updates.name = name;
+        if (imageUrl) updates.image = imageUrl;
+
+        const user = await User.findByIdAndUpdate(userId, updates, { new: true, runValidators: true });
+
+        if (!user) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        res.status(200).json(user);
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
 
 module.exports = { 
-    signupUser, loginUser, getAllUsers, searchUsers, deleteUser, sendResetEmail, resetPassword, googleAuth, googleAuthCallback, googleAuthSuccess
+    signupUser, loginUser, getAllUsers, searchUsers, deleteUser, sendResetEmail, resetPassword, updateUserProfile, googleAuth, googleAuthCallback, googleAuthSuccess
 }

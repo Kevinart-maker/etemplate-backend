@@ -19,7 +19,7 @@ const router = express.Router()
 router.get('/', getProducts)
 
 // get single product
-router.get('/:id', getProduct)
+router.get('/:slug', getProduct)
 
 //get searched products
 router.get('/search', searchProducts);
