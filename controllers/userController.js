@@ -78,7 +78,7 @@ const loginUser = async (req, res) => {
         // create a token 
         const token = createToken(user._id, user.role)
 
-        res.status(200).json({ email, token, role: user.role })
+        res.status(200).json({ email, token, role: user.role, image: user.image })
     } catch(error){
         res.status(400).json({ error: error.message })
     }
@@ -97,7 +97,7 @@ const signupUser = async (req, res) => {
 
         console.log('New user signed up:', { name, email, role }); // Log the user info
 
-        res.status(200).json({ name, email, token, role })
+        res.status(200).json({ name, email, token, role, image: user.image })
     } catch(error){
         res.status(400).json({ error: error.message })
     }
