@@ -11,6 +11,8 @@ Most endpoints require JWT authentication. Add the token to your requests:
 Authorization: Bearer <your_jwt_token>
 ```
 
+---
+
 # Product API Endpoints
 
 ## 1. Get All Products
@@ -29,11 +31,11 @@ GET /products?category=Phone&brand=Apple&price=1000
 
 ## 2. Get Single Product
 ```http
-GET /products/:id
+GET /products/:slug
 ```
 Example:
 ```http
-GET /products/64f5a53d9853f3c1e5a0b4d2
+GET /products/iphone-14
 ```
 
 ## 3. Create Product (Admin only)
@@ -51,31 +53,20 @@ Body:
 - `stock` (required): number
 - `images` (required): file(s) (up to 10 images)
 
-Example Postman setup:
-1. Select POST method
-2. Choose "form-data" in Body
-3. Add fields:
-   - Key: name, Value: "iPhone 14"
-   - Key: description, Value: "Latest iPhone"
-   - Key: price, Value: 999
-   - Key: category, Value: "Phone"
-   - Key: brand, Value: "Apple"
-   - Key: stock, Value: 50
-   - Key: images (Type: File), Value: Select files
-
 ## 4. Update Product (Admin only)
 ```http
 PATCH /products/:id
 Authorization: Bearer <token>
-Content-Type: application/json
+Content-Type: multipart/form-data
 ```
-Body: Any product fields you want to update
+Body: Any product fields you want to update, including new images.
 
 Example:
 ```json
 {
     "price": 899,
-    "stock": 45
+    "stock": 45,
+    "images": [file1, file2]
 }
 ```
 
@@ -103,6 +94,8 @@ Body:
 ```http
 GET /products/:id/reviews
 ```
+
+---
 
 # User API Endpoints
 
@@ -150,7 +143,7 @@ Example:
 GET /user/search?query=admin
 ```
 
-## 5. Delete User (Admin only)
+## 5. Delete User (Super Admin only)
 ```http
 DELETE /user/:id
 Authorization: Bearer <token>
@@ -181,6 +174,28 @@ Body:
 }
 ```
 
+## 8. Update User Profile
+```http
+PATCH /user/profile
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+Body:
+- `name` (optional): string
+- `image` (optional): file (profile image)
+
+Example:
+```http
+PATCH /user/profile
+Authorization: Bearer <token>
+Content-Type: multipart/form-data
+```
+Form-data:
+- `name`: "Jane Doe"
+- `image`: (upload a file)
+
+---
+
 # Testing in Postman
 
 1. **Create a Postman Collection**
@@ -191,7 +206,7 @@ Body:
 2. **Set up Environment Variables**
    - Create a new environment
    - Add variables:
-     - `BASE_URL`: http://localhost:5000/api
+     - `BASE_URL`: http://localhost:4000/api
      - `TOKEN`: (leave empty initially)
 
 3. **Authentication Flow**
@@ -213,9 +228,8 @@ Body:
 Example Postman Test Sequence:
 1. Create user (POST /user/signup)
 2. Login (POST /user/login)
-3. Create product (POST /products)
-4. Get all products (GET /products)
-5. Add review (POST /products/:id/reviews)
-6. Get product reviews (GET /products/:id/reviews)
-
-Would you like me to provide more specific examples for any of these endpoints?
+3. Update profile (PATCH /user/profile)
+4. Create product (POST /products)
+5. Get all products (GET /products)
+6. Add review (POST /products/:id/reviews)
+7. Get product reviews (GET /products/:id/reviews)

@@ -1,7 +1,7 @@
 const express = require('express');
 
 // Controller functions
-const { signupUser, loginUser, getAllUsers, searchUsers, deleteUser, resetPassword, sendResetEmail, updateUserProfile } = require('../controllers/userController');
+const { signupUser, loginUser, getAllUsers, searchUsers, deleteUser, resetPassword, sendResetEmail, updateUserProfile, getUserStats } = require('../controllers/userController');
 const { requireAuth, requireAdmin, requireSuperAdmin } = require('../middleware/requireAuth');
 const upload = require('../middleware/uploadMiddleware')
 
@@ -39,5 +39,8 @@ router.post('/reset-password', resetPassword);
 
 // Update user profile route
 router.patch('/profile', requireAuth, upload.single('image'), updateUserProfile);
+
+router.get('/stats', requireAuth, requireAdmin, getUserStats);
+// This route is for getting user statistics
 
 module.exports = router;

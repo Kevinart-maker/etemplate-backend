@@ -5,6 +5,7 @@ require('dotenv').config();
 const passport = require('passport');
 const GoogleStrategy = require('passport-google-oauth20').Strategy;
 const cloudinary = require('../config/cloudinary');
+const moment = require('moment');
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -237,6 +238,39 @@ const updateUserProfile = async (req, res) => {
     }
 };
 
+const getUserStats = async (req, res) => {
+    try {
+      const today = moment().startOf('day');
+      const yesterday = moment().subtract(1, 'day').startOf('day');
+  
+      const todayCount = await User.countDocuments({
+        createdAt: { $gte: today.toDate() }
+      });
+  
+      const yesterdayCount = await User.countDocuments({
+        createdAt: {
+          $gte: yesterday.toDate(),
+          $lt: today.toDate()
+        }
+      });
+  
+      const total = await User.countDocuments();
+  
+      const percentageChange = yesterdayCount === 0
+        ? 100
+        : ((todayCount - yesterdayCount) / yesterdayCount) * 100;
+  
+      res.json({
+        total,
+        today: todayCount,
+        yesterday: yesterdayCount,
+        percentageChange: Number(percentageChange.toFixed(1))
+      });
+    } catch (err) {
+      res.status(500).json({ error: err.message });
+    }
+  };
+
 module.exports = { 
-    signupUser, loginUser, getAllUsers, searchUsers, deleteUser, sendResetEmail, resetPassword, updateUserProfile, googleAuth, googleAuthCallback, googleAuthSuccess
+    signupUser, loginUser, getAllUsers, searchUsers, deleteUser, sendResetEmail, resetPassword, updateUserProfile, googleAuth, googleAuthCallback, googleAuthSuccess, getUserStats
 }
