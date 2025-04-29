@@ -1,17 +1,40 @@
 const express = require('express');
+const rateLimit = require('express-rate-limit');
 
 // Controller functions
-const { signupUser, loginUser, getAllUsers, searchUsers, deleteUser, resetPassword, sendResetEmail, updateUserProfile, getUserStats } = require('../controllers/userController');
-const { requireAuth, requireAdmin, requireSuperAdmin } = require('../middleware/requireAuth');
-const upload = require('../middleware/uploadMiddleware')
+const {
+    signupUser,
+    loginUser,
+    getAllUsers,
+    searchUsers,
+    deleteUser,
+    resetPassword,
+    sendResetEmail,
+    updateUserProfile,
+    getUserStats
+} = require('../controllers/userController.js');
+
+const {
+    requireAuth,
+    requireAdmin,
+    requireSuperAdmin
+} = require('../middleware/requireAuth.js');
+
+const upload = require('../middleware/uploadMiddleware.js');
 
 const router = express.Router();
+
+const signupLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 5, // Limit each IP to 5 signup requests per windowMs
+    message: 'Too many signup attempts, please try again later',
+});
 
 // Login route
 router.post('/login', loginUser);
 
 // Signup route
-router.post('/signup', signupUser);
+router.post('/signup', signupLimiter, signupUser);
 
 // Example protected routes
 // These are routes that require the user to be authenticated
@@ -19,12 +42,12 @@ router.post('/signup', signupUser);
 // Admin route to get all users
 router.get('/', requireAuth, requireAdmin, getAllUsers); // Fetch all users
 
-router.get('/protected', requireAuth, (req, res) => {
+router.get('/protected', requireAuth, (_, res) => {
     res.send('This is a protected route for authenticated users.');
 });
 
 // These are routes that require the user to be an admin
-router.get('/admin-only', requireAuth, requireAdmin, (req, res) => {
+router.get('/admin-only', requireAuth, requireAdmin, (_, res) => {
     res.send('This is a protected route for admin users only.');
 });
 

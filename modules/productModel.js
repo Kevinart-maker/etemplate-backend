@@ -59,11 +59,22 @@ const productSchema = new mongoose.Schema({
       default: Date.now,
     },
   }],
+  favourites: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    addedAt: { type: Date, default: Date.now },
+  }],
+  payments: [{
+    user: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    amount: Number,
+    status: { type: String, enum: ['pending', 'success', 'failed'], default: 'pending' },
+    reference: String,
+    createdAt: { type: Date, default: Date.now },
+  }],
   createdAt: {
     type: Date,
     default: Date.now,
   },
-});
+}, { timestamps: true });
 
 // Automatically generate slug before saving
 productSchema.pre("save", function (next) {

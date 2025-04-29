@@ -41,6 +41,19 @@ const userSchema = new Schema({
     type: String, // URL to the user's profile image
     default: null, // Default image URL
   },
+  cart: [
+    {
+      product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+      quantity: { type: Number, default: 1, min: 1 },
+      addedAt: { type: Date, default: Date.now },
+    },
+  ],
+  wishlist: [
+    {
+      product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product' },
+      addedAt: { type: Date, default: Date.now },
+    },
+  ],
   createdAt: {
     type: Date,
     default: Date.now,
@@ -61,13 +74,13 @@ userSchema.statics.signup = async function (email, password, role, name) {
       throw Error('Password is not strong enough');
     }
     if (!['user', 'admin', 'superadmin'].includes(role)) {
-      throw Error('Role is not valid');
+      throw Error('Invalid role');
     }
   
     const exists = await this.findOne({ email });
   
     if (exists) {
-      throw Error('Email already exists');
+      throw Error('Signup failed');
     }
   
     const salt = await bcrypt.genSalt(10);
@@ -75,6 +88,10 @@ userSchema.statics.signup = async function (email, password, role, name) {
   
     const user = await this.create({ email, password: hash, role, name, authProvider: 'email' });
   
+    // email verification (optional)
+    // await sendVerificationEmail(user);
+    
+    
     return user;
   };
 

@@ -1,6 +1,8 @@
 const mongoose = require('mongoose')
 const Products = require('../modules/productModel')
+const User = require('../modules/userModel')
 const cloudinary = require('../config/cloudinary')
+const axios = require('axios');
 
 // get all products
 const getProducts = async (req, res) => {
@@ -305,6 +307,137 @@ const searchProducts = async (req, res) => {
     }
 };
 
+// Handle cart items and create Paystack payment
+const handleCheckout = async (req, res) => {
+    const { cartItems, totalAmount } = req.body;
+    const user = req.user;
+
+    try {
+        // Create a payment reference
+        const reference = `paystack_${Date.now()}`;
+
+        // Initialize Paystack payment
+        const response = await axios.post(
+            'https://api.paystack.co/transaction/initialize',
+            {
+                email: user.email,
+                amount: totalAmount * 100, // Convert to kobo
+                reference,
+            },
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                },
+            }
+        );
+
+        // Save payment details in the database
+        await Products.updateMany(
+            { _id: { $in: cartItems } },
+            {
+                $push: {
+                    payments: {
+                        user: user._id,
+                        amount: totalAmount,
+                        reference,
+                    },
+                },
+            }
+        );
+
+        res.status(200).json({ paymentUrl: response.data.data.authorization_url });
+    } catch (error) {
+        console.error('Paystack error:', error.response ? error.response.data : error.message);
+        res.status(500).json({ error: 'Failed to initialize payment', details: error.response ? error.response.data : error.message });
+    }
+    
+};
+
+// Verify if payment was successful
+const verifyPayment = async (req, res) => {
+    const { reference } = req.query;
+
+    try {
+        // Verify payment with Paystack
+        const response = await axios.get(
+            `https://api.paystack.co/transaction/verify/${reference}`,
+            {
+                headers: {
+                    Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+                },
+            }
+        );
+
+        const paymentStatus = response.data.data.status;
+
+        // Update payment status in the database
+        await Products.updateMany(
+            { 'payments.reference': reference },
+            { $set: { 'payments.$.status': paymentStatus } }
+        );
+
+        res.status(200).json({ status: paymentStatus });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to verify payment' });
+    }
+};
+
+// Add an item to the user's wishlist
+const addToFavourites = async (req, res) => {
+    const { productId } = req.body;
+    const user = req.user;
+
+    try {
+        const product = await Products.findByIdAndUpdate(
+            productId,
+            { $addToSet: { favourites: { user: user._id } } },
+            { new: true }
+        );
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        res.status(200).json({ message: 'Added to favourites', product });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add to favourites' });
+    }
+};
+
+// Get all items in the user's wishlist
+const getFavourites = async (req, res) => {
+    const user = req.user;
+
+    try {
+        const products = await Products.find({ 'favourites.user': user._id });
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch favourites' });
+    }
+};
+
+// Remove an item from the user's wishlist
+const removeFromFavourites = async (req, res) => {
+    const { id } = req.params;
+    const user = req.user;
+
+    try {
+        const product = await Products.findByIdAndUpdate(
+            id,
+            { $pull: { favourites: { user: user._id } } },
+            { new: true }
+        );
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        res.status(200).json({ message: 'Removed from favourites', product });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to remove from favourites' });
+    }
+};
+
 module.exports = {
     getProducts,
     getProduct,
@@ -313,5 +446,10 @@ module.exports = {
     updateProduct,
     addReview,
     getProductReviews,
-    searchProducts
+    searchProducts,
+    handleCheckout,
+    verifyPayment,
+    addToFavourites,
+    getFavourites,
+    removeFromFavourites
 }

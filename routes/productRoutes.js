@@ -7,7 +7,12 @@ const{
     updateProduct,
     addReview,
     getProductReviews,
-    searchProducts
+    searchProducts,
+    handleCheckout,
+    verifyPayment,
+    addToFavourites,
+    getFavourites,
+    removeFromFavourites
 } = require('../controllers/productController')
 const { requireAuth, requireAdmin } = require('../middleware/requireAuth')
 const upload = require('../middleware/uploadMiddleware')
@@ -41,5 +46,14 @@ router.post('/:id/reviews', requireAuth, addReview);
 
 // Get reviews for a product
 router.get('/:id/reviews', getProductReviews);
+
+// Payment routes
+router.post('/checkout', requireAuth, handleCheckout);
+router.get('/payment/verify', requireAuth, verifyPayment);
+
+// Wishlist routes
+router.post('/favourite', requireAuth, addToFavourites);
+router.get('/favourite', requireAuth, getFavourites);
+router.delete('/favourite/:id', requireAuth, removeFromFavourites);
 
 module.exports = router
