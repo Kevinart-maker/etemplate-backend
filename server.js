@@ -9,6 +9,10 @@ const mongoose = require('mongoose');
 const productRoutes = require('./routes/productRoutes');
 const cors = require('cors');
 const userRoutes = require('./routes/user')
+const salesRoutes = require('./routes/salesRoutes');
+const orderTrackingRoutes = require('./routes/orderTrackingRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const orderRoutes = require('./routes/orderRoutes');
 
 // Express app
 const app = express();
@@ -68,6 +72,10 @@ const searchProducts = async (req, res) => {
 app.use('/api/products/', productRoutes);
 app.use('/api/product/search', searchProducts);
 app.use('/api/user', userRoutes);
+app.use('/api/sales', salesRoutes);
+app.use('/api/order-tracking', orderTrackingRoutes);
+app.use('/api/invoices', invoiceRoutes);
+app.use('/api/orders', orderRoutes);
 
 // Connect to MongoDB and start the server
 mongoose.connect(process.env.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
